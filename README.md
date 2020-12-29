@@ -51,7 +51,7 @@ In your `conf/application.conf` file:
 #
 # cassandra
 #
-cassandra.contact_points = localhost:19042
+cassandra.contact_points = localhost:19042,localhost:19043
 cassandra.username = root
 cassandra.password = test
 cassandra.keyspace = ninja_dev
