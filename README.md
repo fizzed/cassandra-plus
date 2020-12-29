@@ -52,9 +52,15 @@ In your `conf/application.conf` file:
 # cassandra
 #
 cassandra.contact_points = localhost:19042
+cassandra.username = root
+cassandra.password = test
 cassandra.keyspace = ninja_dev
+cassandra.validate_at_start = true
 cassandra.migrate.enabled = true
 ```
+
+If you intend on migrations, by default this module will search your classpath
+for any `.cql` files in the `db.cassandra` package.
 
 ### Demo 
 
