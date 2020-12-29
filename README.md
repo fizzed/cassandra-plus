@@ -1,7 +1,7 @@
 Cassandra Plus by Fizzed
 ============================================
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fizzed/ninja-prometheus/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fizzed/ninja-prometheus)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fizzed/cassandra-plus/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fizzed/cassandra-plus)
 
 [Fizzed, Inc.](http://fizzed.com) (Follow on Twitter: [@fizzed_inc](http://twitter.com/fizzed_inc))
 
