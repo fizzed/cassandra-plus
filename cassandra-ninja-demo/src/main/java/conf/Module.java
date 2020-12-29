@@ -1,6 +1,6 @@
 package conf;
 
-import com.greenback.cassandra.ninja.NinjaCassandraModule;
+import com.fizzed.cassandra.ninja.NinjaCassandraModule;
 import ninja.conf.FrameworkModule;
 import ninja.conf.NinjaClassicModule;
 import ninja.utils.NinjaProperties;
