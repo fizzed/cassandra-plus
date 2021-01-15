@@ -1,5 +1,4 @@
 
-import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Contexts;
 import static com.fizzed.blaze.Systems.exec;
 import com.fizzed.blaze.Task;
@@ -9,12 +8,12 @@ import org.slf4j.Logger;
 
 public class blaze {
     private final Logger log = Contexts.logger();
-    private final Config config = Contexts.config();
-
+    
     @Task(order=1, value="Setup depenencies")
     public void setup() throws InterruptedException {
         log.info("Setting up cassandra...");
-        exec("docker", "run", "--name", "ninja-cassandra",
+        
+        exec("docker", "run", "--name", "fizzed-cassandra-plus",
             "-d", "-p", "19042:9042",
             "cassandra:3.11.2")
             .exitValues(0, 125)
@@ -25,7 +24,7 @@ public class blaze {
         for (int i = 0; i < 30 && rv != 0; i++) {
             Thread.sleep(1000L);
             log.info("Waiting for cassandra...");
-            rv = exec("docker", "exec", "-i", "ninja-cassandra", "cqlsh")
+            rv = exec("docker", "exec", "-i", "fizzed-cassandra-plus", "cqlsh")
                 .pipeInput("SELECT * from system.local")
                 .pipeOutput(Streamables.nullOutput())
                 .pipeError(Streamables.nullOutput())
@@ -34,12 +33,12 @@ public class blaze {
         }
         
         String sql = ""
-            + "CREATE KEYSPACE IF NOT EXISTS ninja_dev WITH REPLICATION = {'class':'SimpleStrategy','replication_factor':1};\n"
+            + "CREATE KEYSPACE IF NOT EXISTS cassandra_plus_dev WITH REPLICATION = {'class':'SimpleStrategy','replication_factor':1};\n"
             //+ "CREATE ROLE ninjadev WITH PASSWORD = 'test' AND LOGIN = true;\n"
             //+ "GRANT ALL PERMISSIONS on KEYSPACE ninja_dev to ninjadev;";
             + "";
         
-        exec("docker", "exec", "-i", "ninja-cassandra", "cqlsh")
+        exec("docker", "exec", "-i", "fizzed-cassandra-plus", "cqlsh")
             .pipeInput(sql)
             .exitValues(0, 1)
             .run();
@@ -47,8 +46,9 @@ public class blaze {
 
     @Task(order=2, value="Nukes all setup. Should get you starting from scratch.")
     public void nuke() {
-        log.info("Dropping Cassandra keyspace rucksack_dev...");
-        exec("docker", "rm", "-f", "ninja-cassandra")
+        log.info("Dropping Cassandra keyspace...");
+        
+        exec("docker", "rm", "-f", "fizzed-cassandra-plus")
             .exitValues(0, 1)
             .run();
     }
