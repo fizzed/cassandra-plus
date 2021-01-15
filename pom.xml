@@ -29,7 +29,7 @@
     </properties>
 
     <modules>
-        <module>cassandra-core</module>
+        <module>cassandra-orm</module>
         <module>cassandra-ninja-module</module>
         <module>cassandra-ninja-demo</module>
     </modules>
