@@ -2,25 +2,35 @@ package com.fizzed.cassandra.core.impl;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PagingState;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.Statement;
 import com.fizzed.cassandra.core.CqlBoundQuery;
+import com.fizzed.cassandra.core.CqlColMapper;
 import com.fizzed.cassandra.core.CqlExpressionList;
 import com.fizzed.cassandra.core.CqlQuery;
 import com.fizzed.cassandra.core.CqlRowMapper;
+import com.fizzed.cassandra.core.FindIterator;
 import com.fizzed.cassandra.core.PagedList;
 import com.fizzed.cassandra.core.UnappliedException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import static java.util.Optional.ofNullable;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import javax.persistence.EntityExistsException;
 import javax.persistence.OptimisticLockException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
+    static private final Logger log = LoggerFactory.getLogger(CqlQuery.class);
     
     static interface Clause {
         
@@ -67,8 +77,11 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         }
     }
     
+    private final long id;
     private final Session session;
+    private final ConcurrentHashMap<String,PreparedStatement> preparedStatementCache;
     private final Command command;
+    private boolean prepared;
     private CqlRowMapper<T> rowMapper;
     private String columns;
     private String tableName;
@@ -76,14 +89,17 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
     private List<Clause> clauses;
     private List<Parameter> vals;
     private Set<String> primaryKeys;
+    private Map<String,CqlColMapper> colMappers;
     private Parameter optimisticLock;
     private String groupBy;
     private String orderBy;
     private Integer fetchSize;
     private PagingState pagingState;
     
-    public CqlQueryImpl(Session session, Command command) {
+    public CqlQueryImpl(long id, Session session, Command command) {
+        this.id = id;
         this.session = session;
+        this.preparedStatementCache = new ConcurrentHashMap<>();
         this.command = command;
     }
 
@@ -97,7 +113,23 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         this.rowMapper = rowMapper;
         return this;
     }
+    
+    @Override
+    public CqlQuery<T> colMappers(Map<String,CqlColMapper> colMappers) {
+        this.colMappers = colMappers;
+        return this;
+    }
 
+    private Object cqlVal(String columnName, Object value) {
+        if (this.colMappers != null) {
+            CqlColMapper colMapper = this.colMappers.get(columnName);
+            if (colMapper != null) {
+                return colMapper.apply(value);
+            }
+        }
+        return value;
+    }
+    
     @Override
     public CqlQuery<T> columns(String columns) {
         this.columns = columns;
@@ -115,12 +147,6 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         this.primaryKeys = primaryKeys;
         return this;
     }
-
-    @Override
-    public CqlQuery<T> allowFiltering() {
-        this.allowFiltering = true;
-        return this;
-    }
     
     @Override
     public CqlExpressionList<T> where() {
@@ -129,10 +155,11 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
 
     @Override
     public CqlQuery<T> val(String name, Object value) {
+        final Object cqlValue = this.cqlVal(name, value);
         if (this.vals == null) {
             this.vals = new ArrayList<>();
         }
-        this.vals.add(new Parameter(name, value));
+        this.vals.add(new Parameter(name, cqlValue));
         return this;
     }
     
@@ -145,31 +172,36 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
     
     @Override
     public CqlExpressionList<T> eq(String name, Object value) {
-        this.addClause(new BasicClause(name, "=", value));
+        final Object cqlValue = this.cqlVal(name, value);
+        this.addClause(new BasicClause(name, "=", cqlValue));
         return this;
     }
     
     @Override
     public CqlExpressionList<T> gt(String name, Object value) {
-        this.addClause(new BasicClause(name, ">", value));
+        final Object cqlValue = this.cqlVal(name, value);
+        this.addClause(new BasicClause(name, ">", cqlValue));
         return this;
     }
     
     @Override
     public CqlExpressionList<T> ge(String name, Object value) {
-        this.addClause(new BasicClause(name, ">=", value));
+        final Object cqlValue = this.cqlVal(name, value);
+        this.addClause(new BasicClause(name, ">=", cqlValue));
         return this;
     }
     
     @Override
     public CqlExpressionList<T> lt(String name, Object value) {
-        this.addClause(new BasicClause(name, "<", value));
+        final Object cqlValue = this.cqlVal(name, value);
+        this.addClause(new BasicClause(name, "<", cqlValue));
         return this;
     }
     
     @Override
     public CqlExpressionList<T> le(String name, Object value) {
-        this.addClause(new BasicClause(name, "<=", value));
+        final Object cqlValue = this.cqlVal(name, value);
+        this.addClause(new BasicClause(name, "<=", cqlValue));
         return this;
     }
     
@@ -181,7 +213,8 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
     
     @Override
     public CqlQuery<T> optimisticLock(String name, Object value) {
-        this.optimisticLock = new Parameter(name, value);
+        final Object cqlValue = this.cqlVal(name, value);
+        this.optimisticLock = new Parameter(name, cqlValue);
         return this;
     }
     
@@ -210,6 +243,18 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         } else {
             this.pagingState = null;
         }
+        return this;
+    }
+    
+    @Override
+    public CqlQuery<T> setAllowFiltering(boolean allowFiltering) {
+        this.allowFiltering = allowFiltering;
+        return this;
+    }
+    
+    @Override
+    public CqlQuery<T> setPrepared(boolean prepared) {
+        this.prepared = prepared;
         return this;
     }
     
@@ -392,8 +437,17 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         
         final CqlBoundQuery boundQuery = this.build();
         
-        final BoundStatement statement = this.session.prepare(boundQuery.getCql())
-            .bind(boundQuery.toValues());
+        final Statement statement;
+        
+        if (this.prepared) {
+            final PreparedStatement preparedStatement = this.preparedStatementCache.computeIfAbsent(
+                boundQuery.getCql(), k -> this.session.prepare(k));
+
+            statement = preparedStatement.bind(boundQuery.toValues());
+        }
+        else {
+            statement = new SimpleStatement(boundQuery.getCql(), boundQuery.toValues());
+        }
         
         if (this.fetchSize != null) {
             statement.setFetchSize(this.fetchSize);
@@ -403,31 +457,48 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
             statement.setPagingState(this.pagingState);
         }
         
-        final ResultSet results = this.session.execute(statement);
-        
-        if (!results.wasApplied()) {
-            if (boundQuery.getOptimisticLock() != null) {
-                // build a helpful primary key help message
-                final String pkmsg = boundQuery.getParameters().stream()
-                    .filter(v -> boundQuery.getPrimaryKeys().contains(v.getName()))
-                    .map(v -> v.getName() + "=" + v.getValue())
-                    .collect(joining(", "));
-                
-                if (boundQuery.getOptimisticLock() == null || boundQuery.getOptimisticLock().getValue() == null) {
-                    // Error[Duplicate entry '2000000-2-63f10cfb-11f6-4338-bf0c-386cae93d26d' for key 'uk_local_data_accounting_typed_key']
-                    throw new EntityExistsException(
-                        "Duplicate entry for primary key '" + pkmsg + "' in table " + boundQuery.getTableName(), null);
-                } else {
-                    // Data has changed. updated [0] rows sql[update local_data set document=?, updated_at=? where id=? and updated_at=?] bind[null]
-                    throw new OptimisticLockException(
-                        "Data has changed. Updated [0] rows for primary key '" + pkmsg + "' in table " + boundQuery.getTableName());
-                }
-            }
-            
-            throw new UnappliedException("Unable to apply " + boundQuery.getCommand());
+        if (log.isTraceEnabled()) {
+            log.trace("[txn {}] sql {}", this.id, boundQuery.getCql());
+            log.trace("[txn {}] val {}", this.id, boundQuery.getParameters());
         }
         
-        return results;
+        final long start = System.currentTimeMillis();
+        boolean success = false;
+        try {
+            final ResultSet results = this.session.execute(statement);
+
+            if (!results.wasApplied()) {
+                if (boundQuery.getOptimisticLock() != null) {
+                    // build a helpful primary key help message
+                    final String pkmsg = boundQuery.getParameters().stream()
+                        .filter(v -> boundQuery.getPrimaryKeys().contains(v.getName()))
+                        .map(v -> v.toString())
+                        .collect(joining(", "));
+
+                    if (boundQuery.getOptimisticLock() == null || boundQuery.getOptimisticLock().getValue() == null) {
+                        // Error[Duplicate entry '2000000-2-63f10cfb-11f6-4338-bf0c-386cae93d26d' for key 'uk_local_data_accounting_typed_key']
+                        throw new EntityExistsException(
+                            "Duplicate entry for primary key '" + pkmsg + "' in table " + boundQuery.getTableName(), null);
+                    } else {
+                        // Data has changed. updated [0] rows sql[update local_data set document=?, updated_at=? where id=? and updated_at=?] bind[null]
+                        throw new OptimisticLockException(
+                            "Data has changed. Updated [0] rows for primary key '" + pkmsg + "' in table " + boundQuery.getTableName());
+                    }
+                }
+
+                throw new UnappliedException("Unable to apply " + boundQuery.getCommand());
+            }
+
+            success = true;
+            
+            return results;
+        }
+        finally {
+            if (log.isTraceEnabled()) {
+                final long elapsedMillis = System.currentTimeMillis() - start;
+                log.trace("[txn {}] execute {} in {} ms", this.id, success ? "success" : "failed", elapsedMillis);
+            }
+        }
     }
 
     @Override
@@ -448,6 +519,12 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         }
         
         return v;
+    }
+
+    @Override
+    public FindIterator<T> findIterator() {
+        final ResultSet results = this.execute();
+        return new FindIterator<>(results, this.rowMapper);
     }
     
     @Override

@@ -8,12 +8,20 @@ import org.joda.time.DateTimeZone;
 
 public class DataTypesJoda {
  
-    static public Date cqlTimestampJoda(DateTime v) {
+    static public Date cqlTimestampJoda(Object v) {
         if (v == null) {
             return null;
         }
         
-        return v.toDate();
+        if (v instanceof DateTime) {
+            return ((DateTime)v).toDate();
+        }
+        
+        if (v instanceof Date) {
+            return (Date)v;
+        }
+        
+        throw new IllegalArgumentException("Unable to convert to DateTime");
     }
  
     static private DateTime jodaDateTime(Object v) {

@@ -2,6 +2,7 @@ package com.fizzed.cassandra.core;
 
 import com.datastax.driver.core.ResultSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import static java.util.stream.Collectors.toSet;
@@ -37,7 +38,7 @@ public interface CqlQuery<T> {
 
         @Override
         public String toString() {
-            return "Parameter{" + "name=" + name + ", value=" + value + '}';
+            return name + "=" + value;
         }
 
         @Override
@@ -75,6 +76,8 @@ public interface CqlQuery<T> {
     
     CqlQuery<T> rowMapper(CqlRowMapper<T> rowMapper);
     
+    CqlQuery<T> colMappers(Map<String,CqlColMapper> colMappers);
+    
     CqlQuery<T> table(String tableName);
     
     default CqlQuery<T> primaryKeys(Iterable<String> primaryKeys) {
@@ -97,13 +100,13 @@ public interface CqlQuery<T> {
     
     CqlQuery<T> optimisticLock(String name, Object value);
     
-    CqlQuery<T> allowFiltering();
+    CqlQuery<T> setAllowFiltering(boolean allowFiltering);
     
     CqlQuery<T> setFetchSize(Integer fetchSize);
     
     CqlQuery<T> setPagingState(String pagingState);
     
-    
+    CqlQuery<T> setPrepared(boolean prepared);
     
     CqlBoundQuery build();
  
@@ -111,6 +114,8 @@ public interface CqlQuery<T> {
     ResultSet execute();
 
     T findOne();
+    
+    FindIterator<T> findIterator();
     
     List<T> findList();
     

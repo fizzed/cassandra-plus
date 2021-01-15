@@ -16,7 +16,7 @@ public class CqlQueryTest {
         CqlBoundQuery query;
         
         query = this.cassandra.select("test")
-            .allowFiltering()
+            .setAllowFiltering(true)
             .where()
             .eq("a", 1)
             .build();
@@ -49,7 +49,7 @@ public class CqlQueryTest {
         assertThat(query.getParameters().get(2), is(new Parameter("d", asList(1, 2, 3))));
         
         query = this.cassandra.select("test")
-            .allowFiltering()
+            .setAllowFiltering(true)
             .where()
             .eq("a", 1)
             .groupBy("id")
@@ -116,7 +116,7 @@ public class CqlQueryTest {
         CqlBoundQuery query;
         
         query = this.cassandra.delete("test")
-            .allowFiltering()
+            .setAllowFiltering(true)
             .where()
             .eq("a", 1)
             .build();

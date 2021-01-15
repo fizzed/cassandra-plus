@@ -80,12 +80,15 @@ public class DateTypes {
     // Bytes
     //
     
-    static public Byte cqlByte(Number v) {
+    static public Byte cqlByte(Object v) {
         if (v != null) {
             if (v instanceof Byte) {
                 return (Byte)v;
             }
-            return v.byteValue();
+            if (v instanceof Number) {
+                return ((Number)v).byteValue();
+            }
+            throw new IllegalArgumentException("Unable to convert to cqlByte");
         }
         return null;
     }
@@ -140,7 +143,10 @@ public class DateTypes {
             if (v instanceof Short) {
                 return (Short)v;
             }
-            return v.shortValue();
+            if (v instanceof Number) {
+                return ((Number)v).shortValue();
+            }
+            throw new IllegalArgumentException("Unable to convert to cqlShort");
         }
         return null;
     }
@@ -195,7 +201,10 @@ public class DateTypes {
             if (v instanceof Integer) {
                 return (Integer)v;
             }
-            return v.intValue();
+            if (v instanceof Number) {
+                return ((Number)v).intValue();
+            }
+            throw new IllegalArgumentException("Unable to convert to cqlInteger");
         }
         return null;
     }
@@ -250,7 +259,10 @@ public class DateTypes {
             if (v instanceof Long) {
                 return (Long)v;
             }
-            return v.longValue();
+            if (v instanceof Number) {
+                return ((Number)v).longValue();
+            }
+            throw new IllegalArgumentException("Unable to convert to cqlLong");
         }
         return null;
     }

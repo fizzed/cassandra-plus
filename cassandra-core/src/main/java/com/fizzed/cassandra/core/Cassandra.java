@@ -6,16 +6,19 @@ import com.fizzed.cassandra.core.CqlQuery.Command;
 import com.fizzed.cassandra.core.impl.CqlQueryImpl;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Cassandra {
     
     static private final CqlModel<Row> ROW_MODEL = new CqlModel<Row>()
         .setRowMapper(row -> row);
     
+    private final AtomicLong idSequence;
     private final Session session;
     private final Map<Class<?>,CqlModel<?>> modelTypes;
 
     public Cassandra(Session session) {
+        this.idSequence = new AtomicLong();
         this.session = session;
         this.modelTypes = new HashMap<>();
     }
@@ -48,8 +51,9 @@ public class Cassandra {
     }
     
     private <T> CqlQuery<T> select(CqlModel<T> model) {
-        return new CqlQueryImpl<T>(this.session, Command.SELECT)
+        return new CqlQueryImpl<T>(this.idSequence.incrementAndGet(), this.session, Command.SELECT)
             .rowMapper(model.getRowMapper())
+            .colMappers(model.getColMappers())
             .primaryKeys(model.getPrimaryKeys())
             .columns("*")
             .table(model.getTableName());
@@ -68,8 +72,9 @@ public class Cassandra {
     }
     
     public <T> CqlQuery<T> update(CqlModel<T> model) {
-        return new CqlQueryImpl<T>(this.session, Command.UPDATE)
+        return new CqlQueryImpl<T>(this.idSequence.incrementAndGet(), this.session, Command.UPDATE)
             .rowMapper(model.getRowMapper())
+            .colMappers(model.getColMappers())
             .primaryKeys(model.getPrimaryKeys())
             .table(model.getTableName());
     }
@@ -87,8 +92,9 @@ public class Cassandra {
     }
     
     private <T> CqlQuery<T> insert(CqlModel<T> model) {
-        return new CqlQueryImpl<T>(this.session, Command.INSERT)
+        return new CqlQueryImpl<T>(this.idSequence.incrementAndGet(), this.session, Command.INSERT)
             .rowMapper(model.getRowMapper())
+            .colMappers(model.getColMappers())
             .primaryKeys(model.getPrimaryKeys())
             .table(model.getTableName());
     }
@@ -106,8 +112,9 @@ public class Cassandra {
     }
     
     private <T> CqlQuery<T> upsert(CqlModel<T> model) {
-        return new CqlQueryImpl<T>(this.session, Command.UPSERT)
+        return new CqlQueryImpl<T>(this.idSequence.incrementAndGet(), this.session, Command.UPSERT)
             .rowMapper(model.getRowMapper())
+            .colMappers(model.getColMappers())
             .primaryKeys(model.getPrimaryKeys())
             .table(model.getTableName());
     }
@@ -125,8 +132,9 @@ public class Cassandra {
     }
 
     private <T> CqlQuery<T> delete(CqlModel<T> model) {
-        return new CqlQueryImpl<T>(this.session, Command.DELETE)
+        return new CqlQueryImpl<T>(this.idSequence.incrementAndGet(), this.session, Command.DELETE)
             .rowMapper(model.getRowMapper())
+            .colMappers(model.getColMappers())
             .primaryKeys(model.getPrimaryKeys())
             .table(model.getTableName());
     }
