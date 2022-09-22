@@ -1,5 +1,6 @@
 package com.fizzed.cassandra.orm.impl;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PagingState;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
@@ -94,6 +95,8 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
     private String orderBy;
     private Integer fetchSize;
     private PagingState pagingState;
+    private ConsistencyLevel consistencyLevel;
+    private ConsistencyLevel serialConsistencyLevel;
     
     public CqlQueryImpl(long id, Session session, Command command) {
         this.id = id;
@@ -254,6 +257,18 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
     @Override
     public CqlQuery<T> setPrepared(boolean prepared) {
         this.prepared = prepared;
+        return this;
+    }
+    
+    @Override
+    public CqlQuery<T> setConsistencyLevel(ConsistencyLevel consistencyLevel) {
+        this.consistencyLevel = consistencyLevel;
+        return this;
+    }
+    
+    @Override
+    public CqlQuery<T> setSerialConsistencyLevel(ConsistencyLevel consistencyLevel) {
+        this.serialConsistencyLevel = consistencyLevel;
         return this;
     }
     
@@ -454,6 +469,14 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         
         if (this.pagingState != null) {
             statement.setPagingState(this.pagingState);
+        }
+        
+        if (this.consistencyLevel != null) {
+            statement.setConsistencyLevel(this.consistencyLevel);
+        }
+        
+        if (this.serialConsistencyLevel != null) {
+            statement.setSerialConsistencyLevel(this.serialConsistencyLevel);
         }
         
         if (log.isTraceEnabled()) {

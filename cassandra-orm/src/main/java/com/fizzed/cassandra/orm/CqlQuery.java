@@ -1,5 +1,6 @@
 package com.fizzed.cassandra.orm;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ResultSet;
 import java.util.List;
 import java.util.Map;
@@ -108,8 +109,11 @@ public interface CqlQuery<T> {
     
     CqlQuery<T> setPrepared(boolean prepared);
     
+    CqlQuery<T> setConsistencyLevel(ConsistencyLevel consistencyLevel);
+    
+    CqlQuery<T> setSerialConsistencyLevel(ConsistencyLevel consistencyLevel);
+    
     CqlBoundQuery build();
- 
 
     ResultSet execute();
 

@@ -18,9 +18,11 @@ public class NinjaCassandraSessionProvider implements Provider<Session> {
     @Inject
     public NinjaCassandraSessionProvider(
             NinjaProperties ninjaProperties,
+            String name,
             Provider<Cluster> clusterProvider) {
+        
         this.memoizedSupplier = Suppliers.memoize(() -> {
-            return this.build(ninjaProperties, clusterProvider);
+            return this.build(ninjaProperties, name, clusterProvider);
         });
     }
     
@@ -29,9 +31,9 @@ public class NinjaCassandraSessionProvider implements Provider<Session> {
         return this.memoizedSupplier.get();
     }
     
-    public Session build(NinjaProperties ninjaProperties, Provider<Cluster> clusterProvider) {
+    public Session build(NinjaProperties ninjaProperties, String name, Provider<Cluster> clusterProvider) {
         final Cluster cluster = clusterProvider.get();
-        final String keyspace = ninjaProperties.get("cassandra.keyspace");
+        final String keyspace = ninjaProperties.get(name + ".keyspace");
         if (!isEmpty(keyspace)) {
             return cluster.connect(keyspace);
         } else {

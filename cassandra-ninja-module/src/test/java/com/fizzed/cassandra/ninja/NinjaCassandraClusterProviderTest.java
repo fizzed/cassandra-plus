@@ -23,7 +23,7 @@ public class NinjaCassandraClusterProviderTest {
         when(ninjaProperties.getStringArray("cassandra.contact_points"))
             .thenReturn(new String[] { "localhost:9403" });
         
-        Cluster.Builder clusterBuilder = new NinjaCassandraClusterProvider(ninjaProperties)
+        Cluster.Builder clusterBuilder = new NinjaCassandraClusterProvider(ninjaProperties, "cassandra")
             .createBuilder();
         
         assertThat(clusterBuilder.getContactPoints(), hasSize(1));

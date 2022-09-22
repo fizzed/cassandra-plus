@@ -15,7 +15,13 @@ public class BaseTester {
     @Before
     public void setupSession() {
         this.cluster = new Cluster.Builder()
-            .addContactPointsWithPorts(new InetSocketAddress("localhost", 19042))
+//            .addContactPointsWithPorts(new InetSocketAddress("localhost", 19042))
+            .addContactPointsWithPorts(
+                new InetSocketAddress("localhost", 19042),
+                new InetSocketAddress("localhost", 19043),
+                new InetSocketAddress("localhost", 19044),
+                new InetSocketAddress("localhost", 19045),
+                new InetSocketAddress("localhost", 19046))
             .build();
         
         this.session = cluster.connect("cassandra_plus_dev");

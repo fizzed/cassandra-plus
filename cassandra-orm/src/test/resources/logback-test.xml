@@ -1,0 +1,15 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%level] [%thread] %logger{36} [%replace(traceId=%X{trace_id} ){'traceId= ', ''}%replace(ip=%X{ip} ){'ip= ', ''}%replace(country=%X{country} ){'country= ', ''}%replace(userId=%X{user_id} ){'userId= ', ''}%replace(teamId=%X{team_id} ){'teamId= ', ''}] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- set to TRACE to troubleshoot database queries -->
+    <logger name="com.fizzed.cassandra.orm" level="TRACE" />
+    
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </root>
+    
+</configuration>

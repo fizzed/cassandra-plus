@@ -13,11 +13,16 @@ import ninja.utils.NinjaProperties;
 public class NinjaCassandraClusterProvider implements Provider<Cluster> {
 
     private final NinjaProperties ninjaProperties;
+    private final String name;
     private final Supplier<Cluster> memoizedSupplier;
     
     @Inject
-    public NinjaCassandraClusterProvider(NinjaProperties ninjaProperties) {
+    public NinjaCassandraClusterProvider(
+            NinjaProperties ninjaProperties,
+            String name) {
+        
         this.ninjaProperties = ninjaProperties;
+        this.name = name;
         this.memoizedSupplier = Suppliers.memoize(() -> {
             return this.build();
         });
@@ -35,7 +40,7 @@ public class NinjaCassandraClusterProvider implements Provider<Cluster> {
     public Cluster.Builder createBuilder() {
         final Cluster.Builder clusterBuilder = Cluster.builder();
         
-        final String[] contactPoints = ninjaProperties.getStringArray("cassandra.contact_points");
+        final String[] contactPoints = ninjaProperties.getStringArray(this.name + ".contact_points");
         if (contactPoints != null) {
             for (String contactPoint : contactPoints) {
                 if (contactPoint.contains(":")) {
@@ -48,14 +53,14 @@ public class NinjaCassandraClusterProvider implements Provider<Cluster> {
             }
         }
         
-        final String username = ninjaProperties.get("cassandra.username");
+        final String username = ninjaProperties.get(this.name + ".username");
         if (username != null) {
-            String password = ninjaProperties.getOrDie("cassandra.password");
+            String password = ninjaProperties.getOrDie(this.name + ".password");
             clusterBuilder.withCredentials(username, password);
         }
         
         // disable jmx reporting?
-        if (!ninjaProperties.getBooleanWithDefault("cassandra.jmx", false)) {
+        if (!ninjaProperties.getBooleanWithDefault(this.name + ".jmx", false)) {
             clusterBuilder.withoutJMXReporting();
         }
         
