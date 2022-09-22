@@ -37,9 +37,15 @@ import com.google.inject.AbstractModule;
 
 public class Module extends AbstractModule {
 
+    private final NinjaProperties ninjaProperties;
+
+    public Module(NinjaProperties ninjaProperties) {
+        this.ninjaProperties = ninjaProperties;
+    }
+
     @Override
     protected void configure() {
-        install(new NinjaCassandraModule());
+        install(new NinjaCassandraModule(this.ninjaProperties));
     }
 
 }
