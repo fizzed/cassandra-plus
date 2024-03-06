@@ -26,8 +26,10 @@ public class NinjaCassandraModule extends AbstractModule {
         final Provider<Cluster> clusterProvider = new NinjaCassandraClusterProvider(this.ninjaProperties, this.name);
         final Provider<Session> sessionProvider = new NinjaCassandraSessionProvider(this.ninjaProperties, this.name, clusterProvider);
         
-        bind(Cluster.class).annotatedWith(Names.named(this.name)).toProvider(clusterProvider);
-        bind(Session.class).annotatedWith(Names.named(this.name)).toProvider(sessionProvider);
+//        bind(Cluster.class).annotatedWith(Names.named(this.name)).toProvider(clusterProvider);
+//        bind(Session.class).annotatedWith(Names.named(this.name)).toProvider(sessionProvider);
+        bind(Cluster.class).toProvider(clusterProvider);
+        bind(Session.class).toProvider(sessionProvider);
         bind(NinjaCassandraLifecycle.class).toInstance(new NinjaCassandraLifecycle(this.ninjaProperties, this.name, sessionProvider));
         bind(NinjaCassandraMigrate.class).toInstance(new NinjaCassandraMigrate(this.ninjaProperties, this.name, sessionProvider));
     }

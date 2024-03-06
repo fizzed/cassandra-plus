@@ -20,7 +20,7 @@ public class Module extends FrameworkModule {
             .xml(false)
             .jpa(false)
             .cache(false));
-        install(new NinjaCassandraModule());
+        install(new NinjaCassandraModule(ninjaProperties));
     }
 
 }
