@@ -163,12 +163,12 @@ public class CqlQueryRealTest extends BaseTester {
     public void consistencyLevelsWithLWT() {
         this.dropCreateTable();
 
-        ConsistencyLevel nonLwtForWritesConsistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+
 //        ConsistencyLevel consistencyLevel = null;
-        //ConsistencyLevel consistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
-        ConsistencyLevel consistencyLevel = ConsistencyLevel.LOCAL_SERIAL;
-//        ConsistencyLevel consistencyLevel = ConsistencyLevel.LOCAL_ONE;
-        
+//        ConsistencyLevel serialConsistencyLevel = null;
+        ConsistencyLevel consistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+        ConsistencyLevel serialConsistencyLevel = ConsistencyLevel.LOCAL_SERIAL;
+
         for (int i = 0; i < 2000; i++) {
             final List<String> primaryKeys = asList("id");
             final UUID id1 = UUID.randomUUID();
@@ -177,8 +177,8 @@ public class CqlQueryRealTest extends BaseTester {
             final DateTime dt2 = new DateTime(DateTimeZone.UTC).plusMillis(1);
 
             this.cassandra.upsert("query_test")
-//                .setConsistencyLevel(nonLwtForWritesConsistencyLevel)
-                .setSerialConsistencyLevel(ConsistencyLevel.LOCAL_SERIAL)
+                .setConsistencyLevel(consistencyLevel)
+                .setSerialConsistencyLevel(serialConsistencyLevel)
                 .optimisticLock("ts", null)
                 .primaryKeys(primaryKeys)
                 .val("id", id1)
@@ -188,8 +188,8 @@ public class CqlQueryRealTest extends BaseTester {
 
             // use LWT to change the value
             this.cassandra.upsert("query_test")
-//                .setConsistencyLevel(consistencyLevel)
-                .setSerialConsistencyLevel(ConsistencyLevel.LOCAL_SERIAL)
+                .setConsistencyLevel(consistencyLevel)
+                .setSerialConsistencyLevel(serialConsistencyLevel)
                 .optimisticLock("ts", cqlTimestampJoda(dt1))
                 .primaryKeys(primaryKeys)
                 .val("id", id1)
@@ -199,6 +199,7 @@ public class CqlQueryRealTest extends BaseTester {
             
             final Row row1 = this.cassandra.select("query_test")
                 .setConsistencyLevel(consistencyLevel)
+                .setSerialConsistencyLevel(serialConsistencyLevel)
                 .where()
                 .eq("id", id1)
                 .findOne();
@@ -208,8 +209,8 @@ public class CqlQueryRealTest extends BaseTester {
             assertThat(row1.getTimestamp("ts"), is(cqlTimestampJoda(dt2)));
 
             this.cassandra.delete("query_test")
-                //.setConsistencyLevel(nonLwtForWritesConsistencyLevel)
-                .setSerialConsistencyLevel(ConsistencyLevel.LOCAL_SERIAL)
+                .setConsistencyLevel(consistencyLevel)
+                .setSerialConsistencyLevel(serialConsistencyLevel)
                 .optimisticLock("ts", dt2)
                 .where()
                 .eq("id", id1)
@@ -217,6 +218,7 @@ public class CqlQueryRealTest extends BaseTester {
 
             final Row row2 = this.cassandra.select("query_test")
                 .setConsistencyLevel(consistencyLevel)
+                .setSerialConsistencyLevel(serialConsistencyLevel)
                 .where()
                 .eq("id", id1)
                 .findOne();
