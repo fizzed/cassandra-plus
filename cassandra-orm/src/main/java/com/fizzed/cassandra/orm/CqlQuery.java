@@ -1,5 +1,6 @@
 package com.fizzed.cassandra.orm;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.ResultSet;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,11 @@ public interface CqlQuery<T> {
     CqlQuery<T> setFetchSize(Integer fetchSize);
     
     CqlQuery<T> setPagingState(String pagingState);
-    
+
+    CqlQuery<T> setConsistencyLevel(ConsistencyLevel consistencyLevel);
+
+    CqlQuery<T> setSerialConsistencyLevel(ConsistencyLevel consistencyLevel);
+
     CqlQuery<T> setPrepared(boolean prepared);
     
     CqlBoundQuery build();

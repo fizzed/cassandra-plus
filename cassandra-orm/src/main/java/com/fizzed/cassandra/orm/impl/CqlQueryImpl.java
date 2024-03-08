@@ -1,12 +1,6 @@
 package com.fizzed.cassandra.orm.impl;
 
-import com.datastax.driver.core.PagingState;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
-import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.*;
 import com.fizzed.cassandra.orm.CqlBoundQuery;
 import com.fizzed.cassandra.orm.CqlColMapper;
 import com.fizzed.cassandra.orm.CqlExpressionList;
@@ -94,6 +88,8 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
     private String orderBy;
     private Integer fetchSize;
     private PagingState pagingState;
+    private ConsistencyLevel consistencyLevel;
+    private ConsistencyLevel serialConsistencyLevel;
     
     public CqlQueryImpl(long id, Session session, Command command) {
         this.id = id;
@@ -244,7 +240,19 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         }
         return this;
     }
-    
+
+    @Override
+    public CqlQuery<T> setConsistencyLevel(ConsistencyLevel consistencyLevel) {
+        this.consistencyLevel = consistencyLevel;
+        return this;
+    }
+
+    @Override
+    public CqlQuery<T> setSerialConsistencyLevel(ConsistencyLevel consistencyLevel) {
+        this.serialConsistencyLevel = consistencyLevel;
+        return this;
+    }
+
     @Override
     public CqlQuery<T> setAllowFiltering(boolean allowFiltering) {
         this.allowFiltering = allowFiltering;
@@ -447,7 +455,7 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         else {
             statement = new SimpleStatement(boundQuery.getCql(), boundQuery.toValues());
         }
-        
+
         if (this.fetchSize != null) {
             statement.setFetchSize(this.fetchSize);
         }
@@ -455,7 +463,15 @@ public class CqlQueryImpl<T> implements CqlQuery<T>, CqlExpressionList<T> {
         if (this.pagingState != null) {
             statement.setPagingState(this.pagingState);
         }
-        
+
+        if (this.consistencyLevel != null) {
+            statement.setConsistencyLevel(this.consistencyLevel);
+        }
+
+        if (this.serialConsistencyLevel != null) {
+            statement.setSerialConsistencyLevel(this.serialConsistencyLevel);
+        }
+
         if (log.isTraceEnabled()) {
             log.trace("[txn {}] sql {}", this.id, boundQuery.getCql());
             log.trace("[txn {}] val {}", this.id, boundQuery.getParameters());
