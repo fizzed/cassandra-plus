@@ -3,11 +3,12 @@ package com.fizzed.cassandra.ninja;
 import com.datastax.driver.core.Cluster;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import java.net.InetSocketAddress;
+import ninja.utils.NinjaProperties;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import ninja.utils.NinjaProperties;
+import java.net.InetSocketAddress;
 
 @Singleton
 public class NinjaCassandraClusterProvider implements Provider<Cluster> {
@@ -58,7 +59,7 @@ public class NinjaCassandraClusterProvider implements Provider<Cluster> {
         if (!ninjaProperties.getBooleanWithDefault("cassandra.jmx", false)) {
             clusterBuilder.withoutJMXReporting();
         }
-        
+
         return clusterBuilder;
     }
 

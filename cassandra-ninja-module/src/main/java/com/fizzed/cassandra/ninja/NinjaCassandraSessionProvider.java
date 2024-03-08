@@ -32,11 +32,13 @@ public class NinjaCassandraSessionProvider implements Provider<Session> {
     public Session build(NinjaProperties ninjaProperties, Provider<Cluster> clusterProvider) {
         final Cluster cluster = clusterProvider.get();
         final String keyspace = ninjaProperties.get("cassandra.keyspace");
+        final Session session;
         if (!isEmpty(keyspace)) {
-            return cluster.connect(keyspace);
+            session = cluster.connect(keyspace);
         } else {
-            return cluster.connect();
+            session = cluster.connect();
         }
+        return session;
     }
     
 }

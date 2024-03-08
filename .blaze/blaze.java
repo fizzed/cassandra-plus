@@ -24,7 +24,7 @@ public class blaze {
         for (int i = 0; i < 30 && rv != 0; i++) {
             Thread.sleep(1000L);
             log.info("Waiting for cassandra...");
-            rv = exec("docker", "exec", "-i", "fizzed-cassandra-plus", "cqlsh")
+            rv = (int)exec("docker", "exec", "-i", "fizzed-cassandra-plus", "cqlsh")
                 .pipeInput("SELECT * from system.local")
                 .pipeOutput(Streamables.nullOutput())
                 .pipeError(Streamables.nullOutput())
