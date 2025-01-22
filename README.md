@@ -72,7 +72,7 @@ following in your shell (from the root project directory, not in `demo`):
     java -jar blaze.jar setup
     java -jar blaze.jar ninja
 
-Once running, point your browser to http://localhost:1.0.2/
+Once running, point your browser to http://localhost:18080/
 
 ## License
 
