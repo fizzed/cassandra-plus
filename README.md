@@ -76,6 +76,6 @@ Once running, point your browser to http://localhost:18080/
 
 ## License
 
-Copyright (C) 2020 Fizzed, Inc.
+Copyright (C) 2025 Fizzed, Inc.
 
 This work is licensed under the Apache License, Version 2.0. See LICENSE for details.
