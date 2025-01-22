@@ -23,7 +23,7 @@ Add the cassandra-ninja-module dependency to your Maven pom.xml
 <dependency>
     <groupId>com.fizzed</groupId>
     <artifactId>cassandra-ninja-module</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
@@ -72,7 +72,7 @@ following in your shell (from the root project directory, not in `demo`):
     java -jar blaze.jar setup
     java -jar blaze.jar ninja
 
-Once running, point your browser to http://localhost:18080/
+Once running, point your browser to http://localhost:1.0.2/
 
 ## License
 
